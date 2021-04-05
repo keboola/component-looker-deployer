@@ -1,0 +1,74 @@
+{
+    "type": "object",
+    "title": "extractor configuration",
+    "required": [
+        "from",
+        "to"
+    ],
+    "properties": {
+        "from": {
+            "type": "object",
+            "title": "From",
+            "required": [
+                "base_url",
+                "client_id",
+                "#client_secret"
+            ],
+            "properties": {
+                "base_url": {
+                    "type": "string",
+                    "title": "Base URL",
+                    "default": "https://",
+                    "propertyOrder": 100
+                },
+                "client_id": {
+                    "type": "string",
+                    "title": "Client ID",
+                    "propertyOrder": 200
+                },
+                "#client_secret": {
+                    "type": "string",
+                    "format": "password",
+                    "title": "Client Secret",
+                    "propertyOrder": 300
+                }
+            },
+            "propertyOrder": 100
+        },
+        "to": {
+            "type": "object",
+            "title": "From",
+            "required": [
+                "base_url",
+                "client_id",
+                "#client_secret"
+            ],
+            "properties": {
+                "base_url": {
+                    "type": "string",
+                    "title": "Base URL",
+                    "default": "https://",
+                    "propertyOrder": 100
+                },
+                "client_id": {
+                    "type": "string",
+                    "title": "Client ID",
+                    "propertyOrder": 200
+                },
+                "#client_secret": {
+                    "type": "string",
+                    "format": "password",
+                    "title": "Client Secret",
+                    "propertyOrder": 300
+                }
+            },
+            "propertyOrder": 200
+        },
+        "debug": {
+          "type": "boolean",
+          "title": "Debug Mode",
+          "default": false,
+          "propertyOrder": 300
+        }
+    }
+}
