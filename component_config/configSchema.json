@@ -12,7 +12,8 @@
             "required": [
                 "base_url",
                 "client_id",
-                "#client_secret"
+                "#client_secret",
+                "folder_id"
             ],
             "properties": {
                 "base_url": {
@@ -31,6 +32,12 @@
                     "format": "password",
                     "title": "Client Secret",
                     "propertyOrder": 300
+                },
+                "folder_id": {
+                    "type": "string",
+                    "title": "Folder ID",
+                    "description": "What folder id to export content from",
+                    "propertyOrder": 400
                 }
             },
             "propertyOrder": 100
@@ -41,7 +48,9 @@
             "required": [
                 "base_url",
                 "client_id",
-                "#client_secret"
+                "#client_secret",
+                "type",
+                "value"
             ],
             "properties": {
                 "base_url": {
@@ -60,15 +69,36 @@
                     "format": "password",
                     "title": "Client Secret",
                     "propertyOrder": 300
+                },
+                "type": {
+                    "type": "string",
+                    "title": "Export Type",
+                    "enum": [
+                        "folders",
+                        "dashboards",
+                        "looks"
+                    ],
+                    "default": "folders",
+                    "description": "Specifying what to export from [from] content",
+                    "propertyOrder": 400
+                },
+                "value": {
+                    "type": "array",
+                    "title": "Paths",
+                    "description": "Required to specify the full path of the resource. Example for 'dashboards': /Shared/Public/Dashboard_1.json",
+                    "items": {
+                        "type": "string"
+                    },
+                    "propertyOrder": 500
                 }
             },
             "propertyOrder": 200
         },
         "debug": {
-          "type": "boolean",
-          "title": "Debug Mode",
-          "default": false,
-          "propertyOrder": 300
+            "type": "boolean",
+            "title": "Debug Mode",
+            "default": false,
+            "propertyOrder": 300
         }
     }
 }
