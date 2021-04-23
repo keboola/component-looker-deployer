@@ -334,6 +334,7 @@ class Component(CommonInterface):
         for dashboard in res.json():
 
             tmp = {
+                'environment': url,
                 'dashboard_id': f"{dashboard['id']}",
                 'title': dashboard['title'],
                 'space': dashboard['space']['name'],
@@ -374,6 +375,7 @@ class Component(CommonInterface):
 
         for folder in res.json():
             tmp = {
+                'environemnt': url,
                 'id': f"{folder['id']}",
                 'name': folder['name'],
                 'parent_id': f"{folder['parent_id']}"
@@ -401,6 +403,7 @@ class Component(CommonInterface):
 
         for look in res.json():
             tmp = {
+                'url': url,
                 'id': look['id'],
                 'title': look['title'],
                 'public': look['public'],
