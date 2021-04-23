@@ -3,3 +3,4 @@ freezegun
 keboola.component
 keboola.http-client
 looker-deployer
+pandas

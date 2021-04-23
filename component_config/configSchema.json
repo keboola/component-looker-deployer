@@ -1,11 +1,22 @@
 {
     "type": "object",
-    "title": "extractor configuration",
+    "title": "Configuration",
     "required": [
+        "mode",
         "from",
         "to"
     ],
     "properties": {
+        "mode": {
+            "type": "string",
+            "title": "Mode",
+            "enum": [
+                "deploy",
+                "fetch_details"
+            ],
+            "default": "fetch_details",
+            "propertyOrder": 50
+        },
         "from": {
             "type": "object",
             "title": "From",
@@ -44,7 +55,7 @@
         },
         "to": {
             "type": "object",
-            "title": "From",
+            "title": "To",
             "required": [
                 "base_url",
                 "client_id",
