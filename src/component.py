@@ -270,7 +270,9 @@ class Component(CommonInterface):
             f'Exporting data from folder [{from_params["folder_id"]}]')
 
         try:
-            os.system(export_statement)
+            # os.system(export_statement)
+            subprocess.run(export_statement, check=True)
+
         except Exception as err:
             logging.error(err)
             sys.exit(1)
