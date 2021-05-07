@@ -81,6 +81,12 @@
                     "title": "Client Secret",
                     "propertyOrder": 300
                 },
+                "target_folder": {
+                    "type": "string",
+                    "title": "Target Folder",
+                    "description": "Folder path in the designated Looker environment",
+                    "propertyOrder": 350
+                },
                 "type": {
                     "type": "string",
                     "title": "Export Type",

@@ -8,10 +8,12 @@ import subprocess
 from pathlib import Path
 import csv
 import sys
+import json
 import requests
 from urllib.request import pathname2url  # noqa
 import urllib.parse
 import pandas as pd
+from datetime import datetime
 
 from keboola.component import CommonInterface
 
@@ -42,7 +44,9 @@ REQUIRED_PARAMETERS = [
 ]
 REQUIRED_IMAGE_PARS = []
 
-APP_VERSION = '0.0.2'
+CURRENT_DATE = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+APP_VERSION = '0.0.3'
 
 
 def get_local_data_path():
@@ -146,7 +150,13 @@ class Component(CommonInterface):
             logging.error('Please specify what you want to export in [TO].')
             sys.exit(1)
 
-        # 7 - testing connection with FROM credentials
+        # 7 - making sure the target folder is configured in the TO environemnt
+        if to_params['target_folder'] == '':
+            logging.error(
+                'Please configure your [Target Folder] in your [TO] environment.')
+            sys.exit(1)
+
+        # 8 - testing connection with FROM credentials
         logging.info('Checking [FROM] credentials')
         from_url = from_params.get(KEY_BASE_URL)
         from_request_url = urllib.parse.urljoin(from_url, '/api/3.1')
@@ -155,7 +165,7 @@ class Component(CommonInterface):
         from_token = self.authorize(
             url=from_request_url, client_id=from_client_id, client_secret=from_client_secret)
 
-        # 8 - testing connection with TO credentials
+        # 9 - testing connection with TO credentials
         logging.info('Checking [TO] credentials')
         to_url = to_params.get(KEY_BASE_URL)
         to_request_url = urllib.parse.urljoin(to_url, '/api/3.1')
@@ -164,7 +174,7 @@ class Component(CommonInterface):
         self.authorize(url=to_request_url, client_id=to_client_id,
                        client_secret=to_client_secret)
 
-        # 9 - ensure the input folder_id is valid when mode is deploy
+        # 10 - ensure the input folder_id is valid when mode is deploy
         mode = params.get(KEY_MODE)
         if mode == 'deploy':
             from_folders, from_folder_hierarchy = self.get_folder_details(
@@ -249,7 +259,12 @@ class Component(CommonInterface):
             env = ['--env', 'to']
             import_filename = kwargs['value']
 
+            # dashboard/looks to export
             dest = [f'--{kwargs["type"]}', f'{export_path}{import_filename}']
+
+            # target folder in the [to] environment
+            dest.append('--target-folder')
+            dest.append(f'{kwargs["target_folder"]}')
 
             arg = arg + env + dest
 
@@ -277,20 +292,60 @@ class Component(CommonInterface):
             logging.error(err)
             sys.exit(1)
 
+        log = []
         # 2 - Importing Content
         for val in to_params['value']:
             logging.info(f'Importing {to_params["type"]} - {val}')
             import_statement = self.construct_arg(
-                arg_type='import', type=to_params['type'], value=val)
+                arg_type='import', type=to_params['type'], value=val, target_folder=to_params['target_folder'])
             logging.info(f'{import_statement}')
 
-            try:
-                # os.system(import_statement)
-                subprocess.run(import_statement, check=True)
-                # subprocess.run(import_statement_split, check=True)
-            except Exception as err:
-                logging.error(err)
-                sys.exit(1)
+            # Checking the path of the configured value exists
+            file_path = f'/data/exports/{val}'
+
+            if os.path.exists(file_path):
+                try:
+                    subprocess.run(import_statement, check=True)
+                    status = 'DEPLOYED'
+                    issue = ''
+                except Exception:
+                    status = 'FAILED'
+                    issue = 'Request failed.'
+
+                tmp = {
+                    'date': CURRENT_DATE,
+                    'type': to_params['type'],
+                    'value': val,
+                    'status': status,
+                    'issue': issue
+                }
+
+                log.append(tmp)
+
+            else:
+                logging.warning(f'[{val}] does not exist in path.')
+                tmp = {
+                    'date': CURRENT_DATE,
+                    'type': to_params['type'],
+                    'value': val,
+                    'status': 'FAILED',
+                    'issue': f'[{val}] does not exist in path.s'
+                }
+                log.append(tmp)
+
+        # Output log of the run
+        log_df = pd.DataFrame(log)
+        log_file_path = os.path.join(self.tables_out_path, 'log.csv')
+        log_df.to_csv(log_file_path, index=False)
+
+        log_manifest = {
+            'incremental': True,
+            'primary_key': ['date', 'type', 'value']
+        }
+        log_manifest_path = os.path.join(
+            self.tables_out_path, 'log.csv.manifest')
+        with open(log_manifest_path, 'w') as json_file:
+            json.dump(log_manifest, json_file)
 
     def fetch_details(self, params, input_type):
         '''
