@@ -301,7 +301,8 @@ class Component(CommonInterface):
             logging.info(f'{import_statement}')
 
             # Checking the path of the configured value exists
-            file_path = f'/data/exports/{val}'
+            # file_path = f'/data/exports/{val}'
+            file_path = os.path.join(get_data_folder_path(), f'exports/{val}')
 
             if os.path.exists(file_path):
                 try:
