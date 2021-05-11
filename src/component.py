@@ -46,7 +46,7 @@ REQUIRED_IMAGE_PARS = []
 
 CURRENT_DATE = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
-APP_VERSION = '0.0.3'
+APP_VERSION = '0.0.4'
 
 
 def get_local_data_path():
@@ -371,7 +371,7 @@ class Component(CommonInterface):
         self._output(out_dashboards, f'{input_type}_dashboards.csv')
 
         # looks
-        out_looks = self.get_looks_details(url, token)
+        out_looks = self.get_looks_details(url, token, folder_hierarchy)
         self._output(out_looks, f'{input_type}_looks.csv')
 
     def get_dashboard_details(self, url, token, folder_hierarchy):
@@ -446,7 +446,7 @@ class Component(CommonInterface):
 
         return data_out, hierarchy
 
-    def get_looks_details(self, url, token):
+    def get_looks_details(self, url, token, folder_hierarchy):
 
         request_url = urllib.parse.urljoin(url, '/api/4.0/looks')
         request_header = {
@@ -459,14 +459,26 @@ class Component(CommonInterface):
         data_out = []
 
         for look in res.json():
+
             tmp = {
                 'url': url,
                 'id': look['id'],
                 'title': look['title'],
                 'public': look['public'],
                 'folder': look['folder']['name'],
-                'folder_id': look['folder_id']
+                'folder_id': look['folder_id'],
+                'full_name': f'Look_{look["id"]}_{look["title"]}.json'
             }
+
+            full_path = f'{look["folder"]["name"]}'
+            parent_id = int(look['folder']['parent_id'])
+
+            while parent_id:
+                full_path = f'{folder_hierarchy[parent_id]["name"]}/{full_path}'
+                parent_id = folder_hierarchy[parent_id]["parent_id"]
+
+            tmp['full_path'] = f'{full_path}/{tmp["full_name"]}'
+
             data_out.append(tmp)
 
         return data_out
