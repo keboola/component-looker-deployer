@@ -472,7 +472,8 @@ class Component(CommonInterface):
             }
 
             full_path = f'{look["folder"]["name"]}'
-            parent_id = int(look['folder']['parent_id'])
+            parent_id = int(look['folder']['parent_id']
+                            ) if look['folder']['parent_id'] else None
 
             while parent_id:
                 full_path = f'{folder_hierarchy[parent_id]["name"]}/{full_path}'
