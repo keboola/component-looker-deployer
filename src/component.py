@@ -260,7 +260,9 @@ class Component(CommonInterface):
             import_filename = kwargs['value']
 
             # dashboard/looks to export
-            dest = [f'--{kwargs["type"]}', f'{export_path}{import_filename}']
+            file_path = os.path.join(*export_path.split('/'), *import_filename.split('/'))
+            # dest = [f'--{kwargs["type"]}', f'{export_path}{import_filename}']
+            dest = [f'--{kwargs["type"]}', file_path]
 
             # target folder in the [to] environment
             dest.append('--target-folder')
@@ -301,8 +303,8 @@ class Component(CommonInterface):
             logging.info(f'{import_statement}')
 
             # Checking the path of the configured value exists
-            file_path = f'data/exports/{val}'
-            # file_path = os.path.join(get_data_folder_path(), f'exports/{val}')
+            folder_path = 'data/exports/'
+            file_path = os.path.join(*folder_path.split('/'), *val.split('/'))
 
             if os.path.exists(file_path):
                 try:
