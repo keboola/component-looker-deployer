@@ -1,2 +1,1 @@
-Testing functional sample extractor for purposes of the python component template. 
-Implements partial Hubspot extractor using the public sandbox token.
+User has the ability to deploy any updates made to their folders, looks and dashboards from their DEV Looker Instances to their PROD Looker Instances.

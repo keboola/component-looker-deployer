@@ -46,7 +46,7 @@ REQUIRED_IMAGE_PARS = []
 
 CURRENT_DATE = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
-APP_VERSION = '0.0.4'
+APP_VERSION = '0.0.5'
 
 
 def get_local_data_path():
@@ -63,8 +63,9 @@ def get_data_folder_path():
 class Component(CommonInterface):
     def __init__(self):
         # for easier local project setup
-        data_folder_path = get_data_folder_path()
-        super().__init__(data_folder_path=data_folder_path)
+        # data_folder_path = get_data_folder_path()
+        # super().__init__(data_folder_path=data_folder_path)
+        super().__init__()
 
         try:
             # validation of required parameters. Produces ValueError
@@ -106,16 +107,21 @@ class Component(CommonInterface):
             self.deploy(from_params=from_params, to_params=to_params)
 
         elif mode == 'fetch_details':
+
             # Details for FROM
-            self.fetch_details(from_params, 'from')
+            if from_params['base_url']:
+                self.fetch_details(from_params, 'from')
+
             # Details for TO
-            self.fetch_details(to_params, 'to')
+            if to_params['base_url']:
+                self.fetch_details(to_params, 'to')
 
         logging.info('Looker Deployer finished.')
 
     def validate_user_params(self, params):
         '''
         Validating user inputs
+        different functions will have different validation
         '''
 
         # 1 - Ensure inputs are not empty
@@ -123,71 +129,111 @@ class Component(CommonInterface):
             logging.error('Configuration is missing.')
             sys.exit(1)
 
-        # 2 - Ensure FROM credentials are entered
-        from_params = params.get(KEY_FROM)
-        if from_params[KEY_BASE_URL] == '' or not from_params[KEY_CLIENT_ID] or not from_params[KEY_CLIENT_SECRET]:
-            logging.error('[FROM] credentials are missing.')
-            sys.exit(1)
+        # validations specifcally for fetch_details mode
+        if params['mode'] == 'deploy':
 
-        # 3 - Ensure folder id is specified
-        if from_params['folder_id'] == '':
-            logging.error('Please specify your [from] folder id.')
-            sys.exit(1)
-
-        # 4 - Ensure TO credentials are entered
-        to_params = params.get(KEY_TO)
-        if to_params[KEY_BASE_URL] == '' or not to_params[KEY_CLIENT_ID] or not to_params[KEY_CLIENT_SECRET]:
-            logging.error('[TO] credentials are missing.')
-            sys.exit(1)
-
-        # 5 - check desginated type
-        if to_params['type'] not in ('folders', 'dashboards', 'looks'):
-            logging.error(f'Invalid [Export Type]: {to_params["type"]}')
-            sys.exit(1)
-
-        # 6 - make sure there are at least 1 TO path
-        if len(to_params['value']) < 1:
-            logging.error('Please specify what you want to export in [TO].')
-            sys.exit(1)
-
-        # 7 - making sure the target folder is configured in the TO environemnt
-        if to_params['target_folder'] == '':
-            logging.error(
-                'Please configure your [Target Folder] in your [TO] environment.')
-            sys.exit(1)
-
-        # 8 - testing connection with FROM credentials
-        logging.info('Checking [FROM] credentials')
-        from_url = from_params.get(KEY_BASE_URL)
-        from_request_url = urllib.parse.urljoin(from_url, '/api/3.1')
-        from_client_id = from_params.get(KEY_CLIENT_ID)
-        from_client_secret = from_params.get(KEY_CLIENT_SECRET)
-        from_token = self.authorize(
-            url=from_request_url, client_id=from_client_id, client_secret=from_client_secret)
-
-        # 9 - testing connection with TO credentials
-        logging.info('Checking [TO] credentials')
-        to_url = to_params.get(KEY_BASE_URL)
-        to_request_url = urllib.parse.urljoin(to_url, '/api/3.1')
-        to_client_id = to_params.get(KEY_CLIENT_ID)
-        to_client_secret = to_params.get(KEY_CLIENT_SECRET)
-        self.authorize(url=to_request_url, client_id=to_client_id,
-                       client_secret=to_client_secret)
-
-        # 10 - ensure the input folder_id is valid when mode is deploy
-        mode = params.get(KEY_MODE)
-        if mode == 'deploy':
-            from_folders, from_folder_hierarchy = self.get_folder_details(
-                from_url, from_token)
-            try:
-                from_folder_id = int(from_params.get('folder_id'))
-            except Exception:
-                logging.error(f'{from_folder_id} is not a valid id.')
+            # 2 - Ensure FROM credentials are entered
+            from_params = params.get(KEY_FROM)
+            if from_params[KEY_BASE_URL] == '' or not from_params[KEY_CLIENT_ID] or not from_params[KEY_CLIENT_SECRET]:
+                logging.error('[FROM] credentials are missing.')
                 sys.exit(1)
-            if from_folder_id not in from_folder_hierarchy:
+
+            # 3 - Ensure folder id is specified
+            if from_params['folder_id'] == '':
+                logging.error('Please specify your [from] folder id.')
+                sys.exit(1)
+
+            # 4 - Ensure TO credentials are entered
+            to_params = params.get(KEY_TO)
+            if to_params[KEY_BASE_URL] == '' or not to_params[KEY_CLIENT_ID] or not to_params[KEY_CLIENT_SECRET]:
+                logging.error('[TO] credentials are missing.')
+                sys.exit(1)
+
+            # 5 - check desginated type
+            if to_params['type'] not in ('folders', 'dashboards', 'looks'):
+                logging.error(f'Invalid [Export Type]: {to_params["type"]}')
+                sys.exit(1)
+
+            # 6 - make sure there are at least 1 TO path
+            if len(to_params['value']) < 1:
                 logging.error(
-                    f'[{from_folder_id}] from [FROM] is not one of the available folder ids.')
+                    'Please specify what you want to export in [TO].')
                 sys.exit(1)
+
+            # 7 - making sure the target folder is configured in the TO environemnt
+            if to_params['target_folder'] == '':
+                logging.error(
+                    'Please configure your [Target Folder] in your [TO] environment.')
+                sys.exit(1)
+
+            # 8 - testing connection with FROM credentials
+            logging.info('Checking [FROM] credentials')
+            from_url = from_params.get(KEY_BASE_URL)
+            from_request_url = urllib.parse.urljoin(from_url, '/api/3.1')
+            from_client_id = from_params.get(KEY_CLIENT_ID)
+            from_client_secret = from_params.get(KEY_CLIENT_SECRET)
+            from_token = self.authorize(
+                url=from_request_url, client_id=from_client_id, client_secret=from_client_secret)
+
+            # 9 - testing connection with TO credentials
+            logging.info('Checking [TO] credentials')
+            to_url = to_params.get(KEY_BASE_URL)
+            to_request_url = urllib.parse.urljoin(to_url, '/api/3.1')
+            to_client_id = to_params.get(KEY_CLIENT_ID)
+            to_client_secret = to_params.get(KEY_CLIENT_SECRET)
+            self.authorize(url=to_request_url, client_id=to_client_id,
+                           client_secret=to_client_secret)
+
+            # 10 - ensure the input folder_id is valid when mode is deploy
+            mode = params.get(KEY_MODE)
+            if mode == 'deploy':
+                from_folders, from_folder_hierarchy = self.get_folder_details(
+                    from_url, from_token)
+                try:
+                    from_folder_id = int(from_params.get('folder_id'))
+                except Exception:
+                    logging.error(f'{from_folder_id} is not a valid id.')
+                    sys.exit(1)
+                if from_folder_id not in from_folder_hierarchy:
+                    logging.error(
+                        f'[{from_folder_id}] from [FROM] is not one of the available folder ids.')
+                    sys.exit(1)
+
+        elif params['mode'] == 'fetch_details':
+
+            # 11 - ensure one of FROM or TO credentials are entered
+            if params['from']['base_url'] == '' and params['to']['base_url'] == '':
+                logging.error(
+                    'Please configure either [FROM] or [TO] credentials for [fetch_details]')
+                sys.exit(1)
+
+            # 12 - check FROM credentaisl if configuerd
+            from_params = params.get(KEY_FROM)
+            if params['from']['base_url']:
+                logging.info('Checking [FROM] credentials')
+                from_url = from_params.get(KEY_BASE_URL)
+                from_request_url = urllib.parse.urljoin(from_url, '/api/3.1')
+                from_client_id = from_params.get(KEY_CLIENT_ID)
+                from_client_secret = from_params.get(KEY_CLIENT_SECRET)
+                from_token = self.authorize(
+                    url=from_request_url, client_id=from_client_id, client_secret=from_client_secret)
+
+            # 13 - check TO credentials if configured
+            to_params = params.get(KEY_TO)
+            if params['to']['base_url']:
+                logging.info('Checking [TO] credentials')
+                to_url = to_params.get(KEY_BASE_URL)
+                to_request_url = urllib.parse.urljoin(to_url, '/api/3.1')
+                to_client_id = to_params.get(KEY_CLIENT_ID)
+                to_client_secret = to_params.get(KEY_CLIENT_SECRET)
+                self.authorize(url=to_request_url, client_id=to_client_id,
+                               client_secret=to_client_secret)
+
+        else:
+
+            logging.error(
+                'Invalid mode. Please select either [deploy] or [fetch_details]')
+            sys.exit(1)
 
     def post_request(self, url, header, body=None):
         '''
@@ -260,7 +306,8 @@ class Component(CommonInterface):
             import_filename = kwargs['value']
 
             # dashboard/looks to export
-            file_path = os.path.join(*export_path.split('/'), *import_filename.split('/'))
+            file_path = '/' + os.path.join(
+                *export_path.split('/'), *import_filename.split('/'))
             # dest = [f'--{kwargs["type"]}', f'{export_path}{import_filename}']
             dest = [f'--{kwargs["type"]}', file_path]
 
@@ -303,10 +350,13 @@ class Component(CommonInterface):
             logging.info(f'{import_statement}')
 
             # Checking the path of the configured value exists
-            folder_path = 'data/exports/'
-            file_path = os.path.join(*folder_path.split('/'), *val.split('/'))
+            folder_path = '/data/exports/'
+            file_path = '/' + \
+                os.path.join(*folder_path.split('/'), *val.split('/'))
+            logging.info(f'FILE_PATH: {file_path}')
 
             if os.path.exists(file_path):
+
                 try:
                     subprocess.run(import_statement, check=True)
                     status = 'DEPLOYED'
@@ -326,13 +376,14 @@ class Component(CommonInterface):
                 log.append(tmp)
 
             else:
+
                 logging.warning(f'[{val}] does not exist in path.')
                 tmp = {
                     'date': CURRENT_DATE,
                     'type': to_params['type'],
                     'value': val,
                     'status': 'FAILED',
-                    'issue': f'[{val}] does not exist in path.s'
+                    'issue': f'[{val}] does not exist in path.'
                 }
                 log.append(tmp)
 
@@ -381,6 +432,7 @@ class Component(CommonInterface):
         '''
         Getting all dashboard paths
         '''
+        logging.info('Fetching dashboard details.')
 
         request_url = urllib.parse.urljoin(url, '/api/3.1/dashboards')
         request_header = {
@@ -391,6 +443,8 @@ class Component(CommonInterface):
         res = requests.get(request_url, headers=request_header)
 
         data_out = []
+        logging.info(f'Total Dashboards - {len(res.json())}')
+
         for dashboard in res.json():
 
             tmp = {
@@ -406,8 +460,13 @@ class Component(CommonInterface):
             parent_id = dashboard['folder']['parent_id']
 
             while parent_id:
-                full_path = f'{folder_hierarchy[parent_id]["name"]}/{full_path}'
-                parent_id = folder_hierarchy[parent_id]["parent_id"]
+
+                if parent_id not in folder_hierarchy:
+                    parent_id = ''
+
+                else:
+                    full_path = f'{folder_hierarchy[parent_id]["name"]}/{full_path}'
+                    parent_id = folder_hierarchy[parent_id]["parent_id"]
 
             tmp['full_path'] = f'{full_path}/{tmp["full_name"]}'
 
@@ -420,6 +479,7 @@ class Component(CommonInterface):
         Getting all folder details
         '''
 
+        logging.info('Fetching folder details.')
         request_url = urllib.parse.urljoin(url, '/api/3.1/folders')
         request_header = {
             'Authorization': 'Bearer {}'.format(token),
@@ -438,7 +498,8 @@ class Component(CommonInterface):
                 'environemnt': url,
                 'id': f"{folder['id']}",
                 'name': folder['name'],
-                'parent_id': f"{folder['parent_id']}"
+                # 'parent_id': f"{folder['parent_id']}"
+                'parent_id': folder['parent_id']
             }
             data_out.append(tmp)
 
@@ -447,10 +508,32 @@ class Component(CommonInterface):
                 'parent_id': folder['parent_id']
             }
 
-        return data_out, hierarchy
+        # adding full_path
+        data_out_v2 = []
+        for folder in data_out:
+
+            tmp = folder.copy()
+            parent_id = tmp['parent_id']
+            full_path = tmp['name']
+
+            # while parent_id and parent_id != 'None':
+            while parent_id:
+
+                if parent_id not in hierarchy:
+                    parent_id = ''
+
+                else:
+                    full_path = f'{hierarchy[parent_id]["name"]}/{full_path}'
+                    parent_id = hierarchy[parent_id]["parent_id"]
+
+            tmp['full_path'] = full_path
+            data_out_v2.append(tmp)
+
+        return data_out_v2, hierarchy
 
     def get_looks_details(self, url, token, folder_hierarchy):
 
+        logging.info('Fetching Looks details.')
         request_url = urllib.parse.urljoin(url, '/api/4.0/looks')
         request_header = {
             'Authorization': 'Bearer {}'.format(token),
@@ -460,6 +543,8 @@ class Component(CommonInterface):
         res = requests.get(request_url, headers=request_header)
 
         data_out = []
+
+        logging.info(f'Total Looks - {len(res.json())}')
 
         for look in res.json():
 
@@ -478,8 +563,13 @@ class Component(CommonInterface):
                             ) if look['folder']['parent_id'] else None
 
             while parent_id:
-                full_path = f'{folder_hierarchy[parent_id]["name"]}/{full_path}'
-                parent_id = folder_hierarchy[parent_id]["parent_id"]
+
+                if parent_id not in folder_hierarchy:
+                    parent_id = ''
+
+                else:
+                    full_path = f'{folder_hierarchy[parent_id]["name"]}/{full_path}'
+                    parent_id = folder_hierarchy[parent_id]["parent_id"]
 
             tmp['full_path'] = f'{full_path}/{tmp["full_name"]}'
 
