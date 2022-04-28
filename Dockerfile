@@ -1,4 +1,5 @@
-FROM python:3.7.2-slim
+# FROM python:3.7.2-slim
+FROM python:3.7-slim-buster
 ENV PYTHONIOENCODING utf-8
 
 COPY . /code/
@@ -12,9 +13,9 @@ RUN pip install flake8
 
 RUN pip install -r /code/requirements.txt
 
+RUN apt update
 RUN apt -y install ruby ruby-dev
-
-# RUN gem install gazer
+RUN gem install gazer
 
 WORKDIR /code/
 
