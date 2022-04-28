@@ -46,7 +46,7 @@ REQUIRED_IMAGE_PARS = []
 
 CURRENT_DATE = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
-APP_VERSION = '0.0.5'
+APP_VERSION = '0.0.6'
 
 
 def get_local_data_path():
@@ -103,18 +103,25 @@ class Component(CommonInterface):
         mode = params.get(KEY_MODE)
         logging.info(f'Mode: [{mode}]')
 
+        # caching dashboard details for deployment
+        # there had been issues where new dashboards have misaligned ids
+        self.all_dashboards = {
+            'from': {},
+            'to': {}
+        }
+
+        # if mode == 'fetch_details':
+
+        # Details for FROM
+        if from_params['base_url']:
+            self.fetch_details(from_params, 'from')
+
+        # Details for TO
+        if to_params['base_url']:
+            self.fetch_details(to_params, 'to')
+
         if mode == 'deploy':
             self.deploy(from_params=from_params, to_params=to_params)
-
-        elif mode == 'fetch_details':
-
-            # Details for FROM
-            if from_params['base_url']:
-                self.fetch_details(from_params, 'from')
-
-            # Details for TO
-            if to_params['base_url']:
-                self.fetch_details(to_params, 'to')
 
         logging.info('Looker Deployer finished.')
 
@@ -350,9 +357,12 @@ class Component(CommonInterface):
             logging.info(f'{import_statement}')
 
             # Checking the path of the configured value exists
+            # find relative path from "from" environment
+            new_val = self.all_dashboards['from'][val]
+
             folder_path = '/data/exports/'
             file_path = '/' + \
-                os.path.join(*folder_path.split('/'), *val.split('/'))
+                os.path.join(*folder_path.split('/'), *new_val.split('/'))
             logging.info(f'FILE_PATH: {file_path}')
 
             if os.path.exists(file_path):
@@ -421,14 +431,14 @@ class Component(CommonInterface):
 
         # dashboard
         out_dashboards = self.get_dashboard_details(
-            url, token, folder_hierarchy)
+            url, token, folder_hierarchy, input_type)
         self._output(out_dashboards, f'{input_type}_dashboards.csv')
 
         # looks
         out_looks = self.get_looks_details(url, token, folder_hierarchy)
         self._output(out_looks, f'{input_type}_looks.csv')
 
-    def get_dashboard_details(self, url, token, folder_hierarchy):
+    def get_dashboard_details(self, url, token, folder_hierarchy, input_type):
         '''
         Getting all dashboard paths
         '''
@@ -447,6 +457,7 @@ class Component(CommonInterface):
 
         for dashboard in res.json():
 
+            # for Fetch-details
             tmp = {
                 'environment': url,
                 'dashboard_id': f"{dashboard['id']}",
@@ -469,8 +480,14 @@ class Component(CommonInterface):
                     parent_id = folder_hierarchy[parent_id]["parent_id"]
 
             tmp['full_path'] = f'{full_path}/{tmp["full_name"]}'
+            tmp['ui_path'] = f'{full_path}/{tmp["title"]}'
 
             data_out.append(tmp)
+
+            # for deploy endpoint
+            dashboard_ui_path = tmp['ui_path']
+            dashboard_actual_path = tmp['full_path']
+            self.all_dashboards[input_type][dashboard_ui_path] = dashboard_actual_path
 
         return data_out
 

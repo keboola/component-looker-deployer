@@ -1,6 +1,6 @@
 mock
 freezegun
-keboola.component
-keboola.http-client
-looker-deployer
+keboola.component==1.2.0
+keboola.http-client==1.0.0
+looker-deployer==0.3.0
 pandas
