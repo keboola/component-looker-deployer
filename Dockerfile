@@ -14,7 +14,7 @@ RUN pip install -r /code/requirements.txt
 
 RUN apt -y install ruby ruby-dev
 
-# RUN gem install gazer
+RUN gem install gazer
 
 WORKDIR /code/
 
