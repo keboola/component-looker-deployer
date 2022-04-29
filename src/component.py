@@ -351,14 +351,16 @@ class Component(CommonInterface):
         log = []
         # 2 - Importing Content
         for val in to_params['value']:
-            logging.info(f'Importing {to_params["type"]} - {val}')
+
+            # find relative path from "from" environment
+            new_val = self.all_dashboards['from'][val]
+
+            logging.info(f'Importing {to_params["type"]} - {new_val}')
             import_statement = self.construct_arg(
-                arg_type='import', type=to_params['type'], value=val, target_folder=to_params['target_folder'])
+                arg_type='import', type=to_params['type'], value=new_val, target_folder=to_params['target_folder'])
             logging.info(f'{import_statement}')
 
             # Checking the path of the configured value exists
-            # find relative path from "from" environment
-            new_val = self.all_dashboards['from'][val]
 
             folder_path = '/data/exports/'
             file_path = '/' + \
