@@ -110,7 +110,11 @@ class Component(CommonInterface):
             'to': {}
         }
 
-        # if mode == 'fetch_details':
+        # caching looks details for deployment
+        self.all_looks = {
+            'from': {},
+            'to': {}
+        }
 
         # Details for FROM
         if from_params['base_url']:
@@ -353,7 +357,12 @@ class Component(CommonInterface):
         for val in to_params['value']:
 
             # find relative path from "from" environment
-            new_val = self.all_dashboards['from'][val]
+            if to_params['type'] == 'dashboards':
+                new_val = self.all_dashboards['from'][val]
+            elif to_params['type'] == 'looks':
+                new_val = self.all_looks['from'][val]
+            else:
+                new_val = val
 
             logging.info(f'Importing {to_params["type"]} - {new_val}')
             import_statement = self.construct_arg(
@@ -437,7 +446,8 @@ class Component(CommonInterface):
         self._output(out_dashboards, f'{input_type}_dashboards.csv')
 
         # looks
-        out_looks = self.get_looks_details(url, token, folder_hierarchy)
+        out_looks = self.get_looks_details(
+            url, token, folder_hierarchy, input_type)
         self._output(out_looks, f'{input_type}_looks.csv')
 
     def get_dashboard_details(self, url, token, folder_hierarchy, input_type):
@@ -550,7 +560,7 @@ class Component(CommonInterface):
 
         return data_out_v2, hierarchy
 
-    def get_looks_details(self, url, token, folder_hierarchy):
+    def get_looks_details(self, url, token, folder_hierarchy, input_type):
 
         logging.info('Fetching Looks details.')
         request_url = urllib.parse.urljoin(url, '/api/4.0/looks')
@@ -591,8 +601,14 @@ class Component(CommonInterface):
                     parent_id = folder_hierarchy[parent_id]["parent_id"]
 
             tmp['full_path'] = f'{full_path}/{tmp["full_name"]}'
+            tmp['ui_path'] = f'{full_path}/{tmp["title"]}'
 
             data_out.append(tmp)
+
+            # for deploy endpoint
+            look_ui_path = tmp['ui_path']
+            look_actual_path = tmp['full_path']
+            self.all_looks[input_type][look_ui_path] = look_actual_path
 
         return data_out
 
