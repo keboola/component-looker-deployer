@@ -64,7 +64,7 @@ class Component(CommonInterface):
         # for easier local project setup
         # data_folder_path = get_data_folder_path()
         # super().__init__(data_folder_path=data_folder_path)
-        super().__init__(data_folder_path="../data")
+        super().__init__()
 
         try:
             # validation of required parameters. Produces ValueError
