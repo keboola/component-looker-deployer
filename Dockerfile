@@ -1,5 +1,5 @@
-# FROM python:3.7.2-slim
-FROM python:3.7-slim-buster
+
+FROM python:3.8-slim
 ENV PYTHONIOENCODING utf-8
 
 COPY . /code/

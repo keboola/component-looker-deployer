@@ -17,7 +17,6 @@ from datetime import datetime
 
 from keboola.component import CommonInterface
 
-
 sys.tracebacklimit = 0
 
 # configuration variables
@@ -180,7 +179,7 @@ class Component(CommonInterface):
             # 8 - testing connection with FROM credentials
             logging.info('Checking [FROM] credentials')
             from_url = from_params.get(KEY_BASE_URL)
-            from_request_url = urllib.parse.urljoin(from_url, '/api/3.1')
+            from_request_url = urllib.parse.urljoin(from_url, '/api/4.0')
             from_client_id = from_params.get(KEY_CLIENT_ID)
             from_client_secret = from_params.get(KEY_CLIENT_SECRET)
             from_token = self.authorize(
@@ -189,7 +188,7 @@ class Component(CommonInterface):
             # 9 - testing connection with TO credentials
             logging.info('Checking [TO] credentials')
             to_url = to_params.get(KEY_BASE_URL)
-            to_request_url = urllib.parse.urljoin(to_url, '/api/3.1')
+            to_request_url = urllib.parse.urljoin(to_url, '/api/4.0')
             to_client_id = to_params.get(KEY_CLIENT_ID)
             to_client_secret = to_params.get(KEY_CLIENT_SECRET)
             self.authorize(url=to_request_url, client_id=to_client_id,
@@ -205,7 +204,7 @@ class Component(CommonInterface):
                 except Exception:
                     logging.error(f'{from_folder_id} is not a valid id.')
                     sys.exit(1)
-                if from_folder_id not in from_folder_hierarchy:
+                if str(from_folder_id) not in list(from_folder_hierarchy.keys()):
                     logging.error(
                         f'[{from_folder_id}] from [FROM] is not one of the available folder ids.')
                     sys.exit(1)
@@ -223,7 +222,7 @@ class Component(CommonInterface):
             if params['from']['base_url']:
                 logging.info('Checking [FROM] credentials')
                 from_url = from_params.get(KEY_BASE_URL)
-                from_request_url = urllib.parse.urljoin(from_url, '/api/3.1')
+                from_request_url = urllib.parse.urljoin(from_url, '/api/4.0')
                 from_client_id = from_params.get(KEY_CLIENT_ID)
                 from_client_secret = from_params.get(KEY_CLIENT_SECRET)
                 from_token = self.authorize(
@@ -234,7 +233,7 @@ class Component(CommonInterface):
             if params['to']['base_url']:
                 logging.info('Checking [TO] credentials')
                 to_url = to_params.get(KEY_BASE_URL)
-                to_request_url = urllib.parse.urljoin(to_url, '/api/3.1')
+                to_request_url = urllib.parse.urljoin(to_url, '/api/4.0')
                 to_client_id = to_params.get(KEY_CLIENT_ID)
                 to_client_secret = to_params.get(KEY_CLIENT_SECRET)
                 self.authorize(url=to_request_url, client_id=to_client_id,
@@ -260,13 +259,13 @@ class Component(CommonInterface):
         Authorizing Looker account with client id and secret
         '''
 
-        auth_url = urllib.parse.urljoin(url, '/api/3.1/login')
+        auth_url = urllib.parse.urljoin(url, '/api/4.0/login')
         auth_header = {
             'Content-Type': 'application/x-www-form-urlencoded',
         }
         auth_body = 'client_id={}&client_secret={}'.format(
             client_id, client_secret)
-        request_url = auth_url+'?'+auth_body
+        request_url = auth_url + '?' + auth_body
 
         res = self.post_request(request_url, auth_header)
 
@@ -294,8 +293,7 @@ class Component(CommonInterface):
         writer_obj.writerow([f'[{creds_type}]'])
 
         for cred in KEY_CREDENTIALS:
-
-            statement = f'{cred.replace("#","")}={creds_obj.get(cred)}'
+            statement = f'{cred.replace("#", "")}={creds_obj.get(cred)}'
             writer_obj.writerow([statement])
 
         writer_obj.writerow(['verify_ssl=True'])
@@ -373,7 +371,7 @@ class Component(CommonInterface):
 
             folder_path = '/data/exports/'
             file_path = '/' + \
-                os.path.join(*folder_path.split('/'), *new_val.split('/'))
+                        os.path.join(*folder_path.split('/'), *new_val.split('/'))
             logging.info(f'FILE_PATH: {file_path}')
 
             if os.path.exists(file_path):
@@ -456,7 +454,7 @@ class Component(CommonInterface):
         '''
         logging.info('Fetching dashboard details.')
 
-        request_url = urllib.parse.urljoin(url, '/api/3.1/dashboards')
+        request_url = urllib.parse.urljoin(url, '/api/4.0/dashboards')
         request_header = {
             'Authorization': 'Bearer {}'.format(token),
             'Content-Type': 'application/json'
@@ -474,7 +472,7 @@ class Component(CommonInterface):
                 'environment': url,
                 'dashboard_id': f"{dashboard['id']}",
                 'title': dashboard['title'],
-                'space': dashboard['space']['name'],
+                'space': dashboard.get('space', {}).get('name'),
                 'folder': dashboard['folder']['name'],
                 'full_name': f'Dashboard_{dashboard["id"]}_{dashboard["title"]}.json'
             }
@@ -509,7 +507,7 @@ class Component(CommonInterface):
         '''
 
         logging.info('Fetching folder details.')
-        request_url = urllib.parse.urljoin(url, '/api/3.1/folders')
+        request_url = urllib.parse.urljoin(url, '/api/4.0/folders')
         request_header = {
             'Authorization': 'Bearer {}'.format(token),
             'Content-Type': 'application/json'
