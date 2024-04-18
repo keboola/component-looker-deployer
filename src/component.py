@@ -343,7 +343,7 @@ class Component(CommonInterface):
             f'Exporting data from folder [{from_params["folder_id"]}]')
 
         try:
-            # os.system(export_statement)
+            logging.debug(f"Running export statement: {export_statement}")
             subprocess.run(export_statement, check=True)
 
         except Exception as err:
@@ -365,7 +365,7 @@ class Component(CommonInterface):
             logging.info(f'Importing {to_params["type"]} - {new_val}')
             import_statement = self.construct_arg(
                 arg_type='import', type=to_params['type'], value=new_val, target_folder=to_params['target_folder'])
-            logging.info(f'{import_statement}')
+            logging.info(f'import statement: {import_statement}')
 
             # Checking the path of the configured value exists
 
