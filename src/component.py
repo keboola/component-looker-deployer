@@ -17,8 +17,6 @@ from datetime import datetime
 
 from keboola.component import CommonInterface
 
-sys.tracebacklimit = 0
-
 # configuration variables
 
 # #### Keep for debug
