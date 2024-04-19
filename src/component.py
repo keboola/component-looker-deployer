@@ -348,6 +348,9 @@ class Component(CommonInterface):
             logging.error(err)
             sys.exit(1)
 
+        logging.info("Exiting the component (debug mode) to avoid deploying")
+        sys.exit(0)
+
         log = []
         # 2 - Importing Content
         for val in to_params['value']:
