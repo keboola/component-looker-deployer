@@ -351,9 +351,6 @@ class Component(CommonInterface):
         with open("/data/exports/all_dashboards.json", 'w') as file:
             json.dump(self.all_dashboards, file)
 
-        logging.info("Exiting the component (debug mode) to avoid deploying")
-        sys.exit(0)
-
         log = []
         # 2 - Importing Content
         for val in to_params['value']:
