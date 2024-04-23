@@ -348,8 +348,8 @@ class Component(CommonInterface):
             logging.error(err)
             sys.exit(1)
 
-        with open("/data/exports/all_dashboards.json", 'w') as file:
-            json.dump(self.all_dashboards, file)
+        # with open("/data/exports/all_dashboards.json", 'w') as file:
+        #     json.dump(self.all_dashboards, file)
 
         log = []
         # 2 - Importing Content
