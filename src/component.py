@@ -359,6 +359,8 @@ class Component(CommonInterface):
             if to_params['type'] == 'dashboards':
                 new_val = self.all_dashboards['from'][val]
             elif to_params['type'] == 'looks':
+                logging.debug(f"from: {self.all_looks['from']}")
+                logging.debug(f'looks: {self.all_looks}')
                 new_val = self.all_looks['from'][val]
             else:
                 new_val = val
